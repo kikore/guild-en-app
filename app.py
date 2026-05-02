@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import hashlib
 import altair as alt # 円グラフ作成用に追加
+import plotly.express as px # 冒頭に追加
 
 # --- 設定 ---
 SPREADSHEET_ID = st.secrets["spreadsheet_id"]
@@ -92,24 +93,35 @@ else:
             job_counts = df['流派'].value_counts().reset_index()
             job_counts.columns = ['流派', '人数']
 
-            empty_left, col_main, empty_right = st.columns([1, 2, 1])
+            job_counts = job_counts.sort_values(by='人数', ascending=False)
 
-            with col_main:
-                domain = ['神相', '鉄衣', '素問', '血河', '九霊', '砕夢', '龍吟']
-                range_ = ['#1E90FF', "#FFC400", '#FF69B4', '#8B0000', '#9400D3', "#66DBDB", "#18BE3C"]
-                # 円グラフの作成
-                chart = alt.Chart(job_counts).mark_arc(innerRadius=50).encode(
-                    theta=alt.Theta(field="人数", type="quantitative"),
-                    # scaleを使って色を固定
-                    color=alt.Color(
-                        field="流派", 
-                        type="nominal",
-                        scale=alt.Scale(domain=domain, range=range_),
-                        legend=alt.Legend(title="流派", orient="right")
-                    ),
-                    tooltip=['流派', '人数']
-                ).properties(height=350)
-                st.altair_chart(chart, use_container_width=True)
+            # グラフと集計表を横並びにする
+            col_chart, col_table = st.columns([2, 1]) # 2:1の比率
+
+            with col_chart:
+                color_map = {
+                    '神相': '#1E90FF', '鉄衣': "#FFA600", '素問': '#FF69B4', 
+                    '血河': '#8B0000', '九霊': '#9400D3', '砕夢': '#66DBDB', '龍吟': '#18BE3C'
+                }
+                fig = px.pie(
+                    job_counts, 
+                    values='人数', 
+                    names='流派', 
+                    hole=0.5,
+                    color='流派',
+                    color_discrete_map=color_map, # 色を固定
+                    category_orders={"流派": job_counts['流派'].tolist()} # ★ここが多い順の決め手
+                )
+        
+                # グラフの見た目調整（中央寄せっぽく）
+                fig.update_traces(textposition='inside', textinfo='percent+label')
+                fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=350)
+                
+                st.plotly_chart(fig, use_container_width=True)
+            with col_table:
+                # 右側に集計表を表示
+                st.write("【集計表】")
+                st.dataframe(job_counts, hide_index=True, use_container_width=True)
 
             # 2. メンバー名簿（テーブル）を下に配置
             st.subheader("📝 メンバー名簿")
