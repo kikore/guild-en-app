@@ -78,7 +78,7 @@ else:
 
     # 2. メインコンテンツ
     if st.session_state.page == "home":
-        st.title("<< 宴 >> 基本情報") # メインタトルを更新
+        st.markdown("### << 宴 >> 基本情報")
 
         # データの読み込み
         try:
@@ -88,7 +88,7 @@ else:
             df = raw_df[raw_df['現ギルドID'] == 1][['名前', '流派', '備考']].copy()
 
             # 1. 流派分布（円グラフ）
-            st.subheader("🔮 流派分布")
+            st.markdown("#### 🔮 流派分布")
             # 集計処理（ここも「流派」という名前をそのまま使えます）
             job_counts = df['流派'].value_counts().reset_index()
             job_counts.columns = ['流派', '人数']
@@ -120,11 +120,11 @@ else:
                 st.plotly_chart(fig, use_container_width=True)
             with col_table:
                 # 右側に集計表を表示
-                st.write("【集計表】")
+                st.write("【内訳】")
                 st.dataframe(job_counts, hide_index=True, use_container_width=True)
 
             # 2. メンバー名簿（テーブル）を下に配置
-            st.subheader("📝 メンバー名簿")
+            st.markdown("#### 📝 メンバー名簿")
             st.dataframe(df, hide_index=True, use_container_width=True)
 
         except Exception as e:
